@@ -1,7 +1,8 @@
+const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 const headers = { 'Content-Type': 'application/json' };
 
 export async function createCircle(payload) {
-  const res = await fetch('/api/circles/createCircle', {
+  const res = await fetch(`${API_URL}/api/circles/createCircle`, {
     method: 'POST',
     headers,
     body: JSON.stringify(payload),
@@ -15,7 +16,7 @@ export async function createCircle(payload) {
 }
 
 export async function fetchCircles() {
-  const res = await fetch('/api/circles/getCircles');
+  const res = await fetch(`${API_URL}/api/circles/getCircles`);
 
   if (!res.ok) {
     throw new Error('Не удалось загрузить круги');
@@ -26,7 +27,7 @@ export async function fetchCircles() {
 }
 
 export async function createBridge(payload) {
-  const res = await fetch('/api/circles/createBridge', {
+  const res = await fetch(`${API_URL}/api/circles/createBridge`, {
     method: 'POST',
     headers,
     body: JSON.stringify(payload),
