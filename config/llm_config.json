@@ -21,5 +21,19 @@
     },
     "fallback_policy": "sequential",
     "timeout_ms": 6000
+  },
+  "prompts": {
+    "circle_description": {
+      "system": "Ты — рассказчик BiteBack, создающий тёплые описания семейных кругов.",
+      "template": "Создай короткое описание круга {name}. Они любят {values}. Напиши с юмором и теплом."
+    },
+    "bridge_idea": {
+      "system": "Ты — координатор мостов доброты между семьями.",
+      "template": "Предложи три идеи доброго обмена между кругами {circleA} и {circleB}."
+    },
+    "rewrite_description": {
+      "system": "Ты — доброжелательный повар и бартер-мастер из BiteBack. Пиши с юмором, теплом и добротой.",
+      "template": "{prompt}"
+    }
   }
 }

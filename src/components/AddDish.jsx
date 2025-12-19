@@ -1,14 +1,20 @@
 import { useEffect, useState } from 'react';
 import useLLM from '../hooks/useLLM.js';
+import { fetchCircles } from '../modules/circles/CircleAPI.js';
 
 export default function AddDish() {
   const { generate, loading, source } = useLLM();
   const [photoPrompt, setPhotoPrompt] = useState('домашняя шарлотка с корицей');
   const [description, setDescription] = useState('');
+  const [circles, setCircles] = useState([]);
+  const [circleId, setCircleId] = useState('');
 
   useEffect(() => {
     // Автогенерация описания при загрузке страницы
     handleAutoDescription(photoPrompt);
+    fetchCircles()
+      .then((list) => setCircles(list))
+      .catch(() => setCircles([]));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -45,6 +51,20 @@ export default function AddDish() {
         onChange={(e) => setDescription(e.target.value)}
         placeholder="Здесь появится описание от LLM"
       />
+
+      <label className="mt-6 block text-sm font-medium text-gray-700">Привязать к Circle</label>
+      <select
+        className="mt-1 w-full rounded-md border p-3"
+        value={circleId}
+        onChange={(e) => setCircleId(e.target.value)}
+      >
+        <option value="">— Без круга (глобальный слой)</option>
+        {circles.map((circle) => (
+          <option key={circle.id} value={circle.id}>
+            {circle.name}
+          </option>
+        ))}
+      </select>
 
       <p className="text-xs text-gray-500 italic mt-2">
         ✨ Описание сгенерировано с помощью Grok (xAI)

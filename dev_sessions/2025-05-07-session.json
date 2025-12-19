@@ -1,0 +1,16 @@
+{
+  "date": "2025-05-07T00:00:00Z",
+  "coder": "GPT-5.1-Codex-Max",
+  "summary": "Добавлены Circles/Bridges API, UI-модули и логирование сессий",
+  "files": [
+    "api/circles/*",
+    "api/utils/firestore.js",
+    "api/utils/firestoreLogger.js",
+    "api/utils/sessionLogger.js",
+    "api/llm-router.js",
+    "config/llm_config.json",
+    "src/components/AddDish.jsx",
+    "src/modules/circles/*"
+  ],
+  "next": ["Интегрировать UI мостов в основной роутинг", "Подключить реальную аутентификацию для circles"]
+}
