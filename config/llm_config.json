@@ -1,0 +1,25 @@
+{
+  "llm_config": {
+    "priority_order": ["grok", "gpt-5", "claude"],
+    "models": {
+      "grok": {
+        "provider": "xai",
+        "endpoint": "https://api.x.ai/grok/v1/chat",
+        "free_tier": true,
+        "key_env": "GROK_API_KEY"
+      },
+      "gpt-5": {
+        "provider": "openai",
+        "endpoint": "https://api.openai.com/v1/chat/completions",
+        "key_env": "OPENAI_API_KEY"
+      },
+      "claude": {
+        "provider": "anthropic",
+        "endpoint": "https://api.anthropic.com/v1/messages",
+        "key_env": "CLAUDE_API_KEY"
+      }
+    },
+    "fallback_policy": "sequential",
+    "timeout_ms": 6000
+  }
+}
