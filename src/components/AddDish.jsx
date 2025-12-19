@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import useLLM from '../hooks/useLLM.js';
+import useGrok from '../hooks/useGrok.js';
 import { fetchCircles } from '../modules/circles/CircleAPI.js';
 
 export default function AddDish() {
-  const { generate, loading, source } = useLLM();
+  const { generateDescription, loading, source, error } = useGrok();
   const [photoPrompt, setPhotoPrompt] = useState('домашняя шарлотка с корицей');
   const [description, setDescription] = useState('');
   const [circles, setCircles] = useState([]);
@@ -19,7 +19,7 @@ export default function AddDish() {
   }, []);
 
   async function handleAutoDescription(promptText) {
-    const idea = await generate('rewrite_description', `Опиши блюдо: ${promptText}`);
+    const idea = await generateDescription(promptText);
     setDescription(idea);
   }
 
@@ -72,6 +72,7 @@ export default function AddDish() {
       {source && (
         <p className="text-xs text-gray-400 mt-1">Источник: {source}</p>
       )}
+      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
     </div>
   );
 }
