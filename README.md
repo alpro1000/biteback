@@ -1,0 +1,240 @@
+# 🧱 FULL PROMPT SPEC — PROJECT "BITEBACK"
+
+## 🍕 *The Family Barter Food Platform — Give a Taste, Get a BiteBack*
+
+---
+
+### 🎯 Goal
+Создать веб-платформу **BiteBack** — тёплый, весёлый семейно-дружеский бартер-магазин блюд, где пользователи обмениваются не деньгами, а вниманием, помощью или эмоциями. Сайт должен сочетать атмосферу **домашнего комфорта** и **современного UX**, быть легко масштабируемым и размещённым на **Render + GitHub**.
+
+### ⚙️ Stack & Deployment
+
+#### 🔧 Tech Stack
+
+| Компонент             | Инструмент                                            | Описание                                          |
+| --------------------- | ----------------------------------------------------- | ------------------------------------------------- |
+| **Frontend**          | React 18 + Vite                                       | SPA, быстрый билд                                 |
+| **UI**                | TailwindCSS + DaisyUI                                 | модульный дизайн, адаптивность                    |
+| **Backend**           | Firebase (Auth + Firestore + Storage)                 | безсерверная база данных и хранение фото          |
+| **Hosting**           | Render.com                                            | автоматическое деплой-пайплайн                    |
+| **Version Control**   | GitHub                                                | хранение кода, CI/CD                              |
+| **API / Интеграции**  | Google Maps API (локации), Telegram API (уведомления) | карта обменов и бот-нотификации                   |
+| **LLM (опционально)** | OpenAI / Claude API                                   | автогенерация описаний блюд и предложений бартера |
+
+### 🧩 Frontend Architecture
+
+```
+/src
+ ├── components/
+ │    ├── Navbar.jsx
+ │    ├── Footer.jsx
+ │    ├── DishCard.jsx
+ │    ├── ProfileCard.jsx
+ │    ├── ExchangeModal.jsx
+ │    └── Loader.jsx
+ │
+ ├── pages/
+ │    ├── Home.jsx
+ │    ├── DishDetail.jsx
+ │    ├── Profile.jsx
+ │    ├── AddDish.jsx
+ │    └── About.jsx
+ │
+ ├── context/
+ │    ├── AuthContext.jsx
+ │    └── ThemeContext.jsx
+ │
+ ├── utils/
+ │    ├── firebase.js
+ │    ├── formatDate.js
+ │    └── useGeoLocation.js
+ │
+ ├── assets/
+ │    ├── logo.svg
+ │    ├── icons/
+ │    └── images/
+ │
+ ├── App.jsx
+ ├── main.jsx
+ └── index.css
+```
+
+### 🧠 Backend Schema (Firebase Firestore)
+
+```
+users:
+  uid: string
+  name: string
+  email: string
+  photoURL: string
+  bio: string
+  barterOffers: [dish_id]
+  rating: float
+  location: geopoint
+
+dishes:
+  id: string
+  title: string
+  description: string
+  photoURL: string
+  authorID: string
+  barterFor: string
+  location: geopoint
+  timestamp: datetime
+
+exchanges:
+  id: string
+  dishID: string
+  fromUser: string
+  toUser: string
+  offer: string
+  status: "pending" | "accepted" | "done"
+  feedback: string
+  createdAt: datetime
+```
+
+### 🖥️ Main Pages and Flow
+
+#### 🏠 Home
+- Лента с карточками блюд
+- Фильтры: по району, типу блюда, тегам
+- Кнопка “+ Добавить блюдо”
+
+#### 🍲 Dish Detail
+- Фото, описание, автор
+- Кнопка **“Предложить обмен”** → открывает форму или Telegram чат
+- Блок “Что я хочу взамен”
+- Отзывы и “истории обмена”
+
+#### 👤 Profile
+- Фото, био, локация
+- Список добавленных блюд
+- Полученные отзывы и рейтинг доброты
+- Кнопка “Добавить новое блюдо”
+
+#### ➕ Add Dish
+Форма:
+```
+[Загрузить фото]
+Название блюда:
+Описание:
+Что хочу взамен:
+Локация (автоопределение)
+[Опубликовать]
+```
+
+#### 💬 Exchange Modal
+Popup с формой:
+- Сообщение автору
+- Предложение (“Предлагаю за пиццу: поход в кино 🍿”)
+- Отправить → создает запись в Firestore
+
+### 🎨 Design System
+
+| Элемент              | Стиль                                                                                             |
+| -------------------- | ------------------------------------------------------------------------------------------------- |
+| **Основная палитра** | Крем `#FFF8E7`, Вишнёвый `#C41E3A`, Ягодный `#E65A5A`, Оливковый `#6B8E23`, Карамельный `#A0522D` |
+| **Шрифт**            | Nunito Sans / Poppins Rounded                                                                     |
+| **Иконки**           | Смешные, дружелюбные (Lucide / HeroIcons)                                                         |
+| **Тон общения**      | Тёплый, с юмором: “Пирог за доброту? Договорились!”                                               |
+
+### 🚀 Развёртывание на Render
+1. Создай репозиторий:
+   ```bash
+   git init
+   git remote add origin https://github.com/<username>/biteback.git
+   ```
+2. Добавь `.env`:
+   ```
+   VITE_FIREBASE_API_KEY=xxxx
+   VITE_FIREBASE_PROJECT_ID=biteback-app
+   VITE_MAPS_API_KEY=xxxx
+   ```
+3. Собери проект:
+   ```bash
+   npm run build
+   ```
+4. Зайди в [render.com](https://render.com):
+   * New → Web Service → Connect GitHub → выбери `biteback`
+   * Build Command: `npm install && npm run build`
+   * Start Command: `npm run preview`
+   * Укажи Environment Variables из `.env`
+5. Автодеплой при каждом push в `main`.
+
+### 🧰 GitHub Setup
+**Branches:**
+```
+main        ← продакшн
+develop     ← активная разработка
+feature/*   ← отдельные фичи (feature/add-dish)
+```
+**Actions (CI/CD):**
+- Автоматическая сборка и деплой на Render при push в main
+- Линтинг (ESLint + Prettier)
+
+**README.md:**
+```markdown
+# 🍕 BiteBack — Give a Taste, Get a BiteBack
+The family barter food marketplace. No money, just kindness and flavor!
+
+## Stack
+React + Firebase + TailwindCSS
+Deployed on Render.
+
+## Features
+- Add dishes with photo & barter
+- Simple chat for exchanges
+- Map of local swaps
+- Friendly social UI
+
+## Dev
+npm install
+npm run dev
+```
+
+### 🧩 AI-Integration Ideas
+- **Auto-description generator** (LLM): анализ фото, генерация описания (“домашняя шарлотка с корицей, готова обменяться на прогулку с собакой 🐕”)
+- **Smart barter suggester:** предлагает 3 варианта обмена по контексту
+- **Moderation AI:** проверяет, чтобы не было нежелательных фраз/контента
+
+### 🪴 Versioning & Roadmap
+
+| Версия | Цель             | Основные фичи                       |
+| ------ | ---------------- | ----------------------------------- |
+| v0.1   | Семейный MVP     | Auth, AddDish, Feed, Barter Modal   |
+| v0.2   | Beta для друзей  | Отзывы, рейтинг, карта              |
+| v0.3   | Публичный запуск | Telegram-бот + Instagram интеграция |
+| v1.0   | Production       | AI описания, пуш-уведомления        |
+
+### 📈 Мониторинг
+- Firebase Analytics — отслеживание активных пользователей
+- Google Tag Manager — конверсии (новые обмены)
+- Sentry.io — логирование ошибок
+- Cron job: ежедневный дамп данных в JSON backup (Render cron)
+
+### 🧑‍🤝‍🧑 BiteBack Family Beta
+Первые тестеры — семья и друзья.
+Создай Telegram-группу **“BiteBack Family 🍕”** и интегрируй бота:
+```bash
+/start
+📸 Отправь фото блюда
+📝 Напиши описание
+🤝 Укажи, что хочешь взамен
+```
+Данные сохраняются в Firestore через Webhook.
+
+### 🧱 Запрос для ChatGPT / Claude / Cursor
+(Можно вставить напрямую для генерации кода MVP)
+```text
+Create a full React + Firebase MVP for the project "BiteBack" — a friendly food barter web app where users exchange dishes for favors or compliments instead of money. Use TailwindCSS and DaisyUI for UI, include authentication, photo upload, feed, and barter modal. Prepare for deployment on Render. Include .env structure, Firestore schema, and responsive layout.
+```
+
+### ✅ Финальный Checklist
+- [ ] GitHub репозиторий создан
+- [ ] Firebase подключён
+- [ ] Render деплой настроен
+- [ ] MVP страницы готовы (Home / AddDish / Profile)
+- [ ] Telegram-группа и бот работают
+- [ ] Instagram создан и подключен
+- [ ] Первые 5 обменов проведены
+
