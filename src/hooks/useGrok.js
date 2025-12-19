@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-const API_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+const API_URL = import.meta.env.VITE_API_URL;
 
 export function useGrok() {
   const [loading, setLoading] = useState(false);
