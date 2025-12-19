@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: biteback
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm run preview
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: USE_GROK
+        value: true
+      - key: GROK_API_KEY
+        sync: false
