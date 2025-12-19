@@ -1,4 +1,5 @@
 import axios from 'axios';
+import config from '../config/llm_config.json' assert { type: 'json' };
 import { logLlmUsage } from './utils/firestoreLogger.js';
 
 const GROK_URL = 'https://api.x.ai/grok/v1/chat';
@@ -20,15 +21,38 @@ function shouldAcceptGrok({ output, confidence }) {
   return confidence >= 0.6;
 }
 
-export async function llmRouter(req, res) {
-  const { prompt, taskType } = req.body || {};
+function formatPrompt(taskType, promptInput) {
+  const prompts = config?.prompts || {};
+  const promptConfig = prompts[taskType];
 
-  if (!prompt) {
+  if (!promptConfig) {
+    return typeof promptInput === 'string' ? promptInput : JSON.stringify(promptInput || {});
+  }
+
+  if (typeof promptInput !== 'object') {
+    return promptConfig.template?.replace('{prompt}', promptInput) || promptInput;
+  }
+
+  return Object.entries(promptInput).reduce((acc, [key, value]) => {
+    const replacer = Array.isArray(value) ? value.join(', ') : value;
+    return acc.replaceAll(`{${key}}`, replacer ?? '');
+  }, promptConfig.template || '');
+}
+
+export async function llmRouter(req, res) {
+  const { prompt: promptInput, taskType } = req.body || {};
+
+  if (!promptInput) {
     res.status(400).json({ error: 'Prompt is required' });
     return;
   }
 
+  const prompt = formatPrompt(taskType, promptInput);
   const start = Date.now();
+
+  const grokSystem = taskType && config?.prompts?.[taskType]?.system
+    ? config.prompts[taskType].system
+    : 'Ты — доброжелательный повар и бартер-мастер из BiteBack. Пиши с юмором, теплом и добротой.';
 
   // 1️⃣ Grok first
   try {
@@ -36,7 +60,7 @@ export async function llmRouter(req, res) {
       GROK_URL,
       {
         prompt,
-        system: 'Ты — доброжелательный повар и бартер-мастер из BiteBack. Пиши с юмором, теплом и добротой.',
+        system: grokSystem,
       },
       {
         headers: { Authorization: `Bearer ${process.env.GROK_API_KEY}` },
