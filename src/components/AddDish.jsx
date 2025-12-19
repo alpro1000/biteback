@@ -1,77 +1,103 @@
-import { useEffect, useState } from 'react';
-import useLLM from '../hooks/useLLM.js';
-import { fetchCircles } from '../modules/circles/CircleAPI.js';
+import { useState } from 'react';
+import { generateDescription } from '../hooks/useGrok.js';
+import { useFirestore } from '../hooks/useFirestore.js';
 
 export default function AddDish() {
-  const { generate, loading, source } = useLLM();
-  const [photoPrompt, setPhotoPrompt] = useState('домашняя шарлотка с корицей');
+  const { addDish, circles } = useFirestore();
+  const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [circles, setCircles] = useState([]);
   const [circleId, setCircleId] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState('');
 
-  useEffect(() => {
-    // Автогенерация описания при загрузке страницы
-    handleAutoDescription(photoPrompt);
-    fetchCircles()
-      .then((list) => setCircles(list))
-      .catch(() => setCircles([]));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const handleGenerate = async () => {
+    if (!title) {
+      setStatus('Введите название блюда, чтобы Grok подсказал описание.');
+      return;
+    }
+    setLoading(true);
+    setStatus('Генерируем описание через Grok...');
+    const text = await generateDescription(title);
+    setDescription(text);
+    setLoading(false);
+    setStatus('Описание готово 🎉');
+  };
 
-  async function handleAutoDescription(promptText) {
-    const idea = await generate('rewrite_description', `Опиши блюдо: ${promptText}`);
-    setDescription(idea);
-  }
+  const handleSave = async () => {
+    if (!title) {
+      setStatus('Название — обязательное поле.');
+      return;
+    }
+    try {
+      await addDish({ title, description, circleId });
+      setStatus('Блюдо сохранено в Firestore!');
+      setTitle('');
+      setDescription('');
+      setCircleId('');
+    } catch (error) {
+      setStatus(`Не удалось сохранить блюдо: ${error.message}`);
+    }
+  };
 
   return (
-    <div className="p-6 bg-white rounded-xl shadow-md max-w-xl mx-auto">
-      <h2 className="text-2xl font-semibold mb-4">Добавить блюдо</h2>
-      <label className="block text-sm font-medium text-gray-700">Описание блюда</label>
-      <textarea
-        className="mt-1 w-full rounded-md border p-3"
-        rows={4}
-        value={photoPrompt}
-        onChange={(e) => setPhotoPrompt(e.target.value)}
-        placeholder="Введите описание фото"
-      />
+    <section className="glow-card rounded-2xl bg-white/90 p-6 border-l-4 border-olive">
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <p className="section-kicker">Добавление</p>
+          <h2 className="section-title">Добавить блюдо</h2>
+        </div>
+        <span className="badge-soft bg-cherry/10 text-cherry">Grok LLM</span>
+      </div>
 
-      <button
-        className="mt-3 inline-flex items-center rounded-md bg-rose-600 px-4 py-2 text-white hover:bg-rose-700"
-        onClick={() => handleAutoDescription(photoPrompt)}
-        disabled={loading}
-      >
-        {loading ? 'Генерируем...' : 'Автогенерация из Grok'}
-      </button>
+      <div className="mt-4 space-y-4">
+        <input
+          type="text"
+          className="input input-bordered w-full"
+          placeholder="Название блюда"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
 
-      <label className="block text-sm font-medium text-gray-700 mt-6">Сгенерированное описание</label>
-      <textarea
-        className="mt-1 w-full rounded-md border p-3"
-        rows={6}
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        placeholder="Здесь появится описание от LLM"
-      />
+        <textarea
+          className="textarea textarea-bordered w-full"
+          placeholder="Описание блюда"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          rows={4}
+        />
 
-      <label className="mt-6 block text-sm font-medium text-gray-700">Привязать к Circle</label>
-      <select
-        className="mt-1 w-full rounded-md border p-3"
-        value={circleId}
-        onChange={(e) => setCircleId(e.target.value)}
-      >
-        <option value="">— Без круга (глобальный слой)</option>
-        {circles.map((circle) => (
-          <option key={circle.id} value={circle.id}>
-            {circle.name}
-          </option>
-        ))}
-      </select>
+        <div className="flex flex-wrap gap-3">
+          <button
+            className={`btn btn-primary ${loading ? 'loading' : ''}`}
+            onClick={handleGenerate}
+            type="button"
+          >
+            Автогенерация через Grok
+          </button>
+          <button className="btn btn-outline btn-secondary" onClick={handleSave} type="button">
+            Сохранить в Circle
+          </button>
+        </div>
 
-      <p className="text-xs text-gray-500 italic mt-2">
-        ✨ Описание сгенерировано с помощью Grok (xAI)
-      </p>
-      {source && (
-        <p className="text-xs text-gray-400 mt-1">Источник: {source}</p>
-      )}
-    </div>
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-wood">Привязать к Circle</label>
+          <select
+            className="select select-bordered w-full"
+            value={circleId}
+            onChange={(e) => setCircleId(e.target.value)}
+          >
+            <option value="">— Без круга (глобальный слой)</option>
+            {circles.map((circle) => (
+              <option key={circle.id} value={circle.id}>
+                {circle.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {status && <p className="text-sm text-wood/70">{status}</p>}
+        <p className="text-xs text-wood/60 italic">✨ Описание сгенерировано с помощью Grok (xAI)</p>
+      </div>
+    </section>
   );
 }
